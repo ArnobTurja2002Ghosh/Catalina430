@@ -24,6 +24,9 @@ private:
 	bool				m_paused{ false };				//If game logic is updated
 	bool				m_movement{ !m_paused };
 	bool				m_running{ true };				//If the game is running
+	bool				m_lifeSpan{ true };
+	bool				m_spawner{ true };
+	bool				m_collision{ true };
 
 	//sf::Texture			m_backgroundTexture;
 	//sf::Sprite			m_backgroundSprite;
@@ -39,13 +42,14 @@ private:
 	void sRender();									//Systems: Render
 	void sSpawner();							//Systems: Spawns enemies
 	void sCollision();								//Systems: Collision detection
+	void sGUI();
 
 	void spawnPlayer();
 	void spawnEnemy();
 	void spawnSmallEnemies(std::shared_ptr<Entity> entity);
 	void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& mousePos);
 	void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
-
+	
 public:
 
 	Game(const std::string& configFile);

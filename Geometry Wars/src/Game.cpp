@@ -10,7 +10,6 @@ Game::Game(const std::string& configFile)
 {
 	init(configFile);
 	ImGui::SFML::Init(m_window);
-	ImGui::GetStyle().ScaleAllSizes(1.0f);
 }
 
 void Game::run()
@@ -22,17 +21,29 @@ void Game::run()
 
 		if (!m_paused)
 		{
-			sLifeSpan();
-			sSpawner();
+			if(m_lifeSpan)
+			{
+				sLifeSpan();
+			}
+			
+			if(m_spawner)
+			{
+				sSpawner();
+			}
+			
 			if (m_movement)
 			{
 				sMovement();
 			}
-			sCollision();
+			if(m_collision)
+			{
+				sCollision();
+			}	
 		}
 		
-		sUserInput();
 		ImGui::SFML::Update(m_window, deltaclock.restart());
+		sUserInput();
+		sGUI();
 		sRender();
 
 		//Increment the current frame
@@ -248,6 +259,7 @@ void Game::init(const std::string& config)
 	m_scoreText.setString(std::to_string(m_score));
 
 	spawnPlayer();
+	std::cout << m_player->id()<<"player id";
 }
 
 void Game::setPaused(bool paused)
@@ -385,6 +397,7 @@ void Game::sLifeSpan()
 	}
 }
 
+
 void Game::sRender()
 {
 	m_window.clear();
@@ -400,28 +413,60 @@ void Game::sRender()
 	}
 	m_window.draw(m_scoreText);
 
+	
+	ImGui::SFML::Render(m_window);
+
+	m_window.display();
+}
+
+void Game::sGUI()
+{
 	ImGui::Begin("Window title");
 	//ImGui::Text("Window text!");
-	
+
 	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 	if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
 	{
 		if (ImGui::BeginTabItem("Systems"))
 		{
 			ImGui::Checkbox("Movement", &m_movement);
+			ImGui::Checkbox("Lifespan", &m_lifeSpan);
+			ImGui::Checkbox("Collision", &m_collision);
+			ImGui::Checkbox("Spawning", &m_spawner);
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem("Entities"))
 		{
-			ImGui::Text("This is the Broccoli tab!\nblah blah blah blah blah");
+			if (ImGui::CollapsingHeader("Entities by Tag"))
+			{
+				ImGui::Indent();
+				if (ImGui::CollapsingHeader("bullet"))
+				{
+
+				}
+				if (ImGui::CollapsingHeader("enemy"))
+				{
+
+				}
+				if (ImGui::CollapsingHeader("player"))
+				{
+
+				}
+				if (ImGui::CollapsingHeader("small"))
+				{
+
+				}
+				ImGui::Unindent();
+			}
+			if (ImGui::CollapsingHeader("All Entities"))
+			{
+
+			}
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
 	}
 	ImGui::End();
-	ImGui::SFML::Render(m_window);
-
-	m_window.display();
 }
 
 void Game::sSpawner()
