@@ -18,9 +18,14 @@ private:
 	PlayerConfig		m_playerConfig;					//the player's properties
 	EnemyConfig			m_enemyConfig;					//the enemy's properties
 	BulletConfig		m_bulletConfig;					//the bullet's properties
-	int					m_score{ 0 };					
+	int					m_score{ 0 };
+
 	int					m_currentFrame{ 0 };
 	int					m_lastEnemySpawnTime{ 0 };
+
+	int					m_specialSpawnStart{ 0 };
+	int					m_specialSpawnEnd{ 0 };
+
 	bool				m_paused{ false };				//If game logic is updated
 	bool				m_movement{ !m_paused };
 	bool				m_running{ true };				//If the game is running
@@ -49,6 +54,9 @@ private:
 	void spawnSmallEnemies(std::shared_ptr<Entity> entity);
 	void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& mousePos);
 	void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
+	void spawnSpecialWeapon1(std::shared_ptr<Entity> entity);
+
+	const char* enumToString(entityTags color);
 	
 public:
 

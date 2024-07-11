@@ -6,6 +6,8 @@
 
 #include "Common.h"
 
+#include <map>
+
 Game::Game(const std::string& configFile)
 {
 	init(configFile);
@@ -47,7 +49,7 @@ void Game::run()
 		sRender();
 
 		//Increment the current frame
-		++m_currentFrame;
+		++m_currentFrame; 
 	}
 	ImGui::SFML::Shutdown();
 }
@@ -349,6 +351,7 @@ void Game::sUserInput()
 					if (m_player->cInput->rightMouse == false)
 					{
 						m_player->cInput->rightMouse = true;
+						m_specialSpawnStart = m_currentFrame;
 					}
 				}
 				break;
@@ -433,6 +436,7 @@ void Game::sGUI()
 			ImGui::Checkbox("Lifespan", &m_lifeSpan);
 			ImGui::Checkbox("Collision", &m_collision);
 			ImGui::Checkbox("Spawning", &m_spawner);
+			ImGui::SliderInt("Spawn Interval",&m_enemyConfig.SI,1, 200);
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem("Entities"))
@@ -450,7 +454,17 @@ void Game::sGUI()
 				}
 				if (ImGui::CollapsingHeader("player"))
 				{
+					std::stringstream ss;
 
+					ss << m_player->id();
+
+					std::string sService = ss.str();
+					ImGui::Button("D", ImVec2(20, 20)); ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(m_player->tag())); ImGui::SameLine(); 
+					
+					ss.str(std::string());
+					ss<<"(" << m_player->cTransform->pos.x << "," << m_player->cTransform->pos.y<<")";
+					sService = ss.str();
+					ImGui::Text(sService.c_str());
 				}
 				if (ImGui::CollapsingHeader("small"))
 				{
@@ -460,7 +474,18 @@ void Game::sGUI()
 			}
 			if (ImGui::CollapsingHeader("All Entities"))
 			{
+				for (auto e : m_entities.getEntities()) {
+					std::stringstream ss;
 
+					ss << e->id();
+					std::string sService = ss.str();
+					ImGui::Button("D", ImVec2(20, 20)); ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(e->tag())); ImGui::SameLine();
+
+					ss.str(std::string());
+					ss << "(" << e->cTransform->pos.x << "," << e->cTransform->pos.y << ")";
+					sService = ss.str();
+					ImGui::Text(sService.c_str());
+				}
 			}
 			ImGui::EndTabItem();
 		}
@@ -469,6 +494,18 @@ void Game::sGUI()
 	ImGui::End();
 }
 
+
+// Function to convert a Color enum value to its string 
+// representation 
+const char* Game::enumToString(entityTags color)
+{
+	std::map<entityTags, const char*> colorToString = { { entityTags::none, "none" },
+									 { entityTags::player, "player" },
+									 { entityTags::enemy, "enemy" },
+									{ entityTags::smallEnemy, "smallEnemy" },
+									{ entityTags::bullet, "bullet" } };
+	return colorToString[color];
+}
 void Game::sSpawner()
 {
 	//Enemy Spawner
@@ -486,8 +523,19 @@ void Game::sSpawner()
 	//Special player bullet
 	if (m_player->cInput->rightMouse == true)
 	{
-		spawnSpecialWeapon(m_player);
-		m_player->cInput->rightMouse = false;
+		if ((m_currentFrame - m_specialSpawnStart) >= m_enemyConfig.SI) 
+		{
+			m_player->cInput->rightMouse = false;
+			m_specialSpawnEnd = m_currentFrame;
+		}
+		else if(m_currentFrame- m_specialSpawnEnd <= m_enemyConfig.SI)
+		{
+			m_player->cInput->rightMouse = false;
+		}
+		else if((m_currentFrame%10)==0)
+		{
+			spawnSpecialWeapon(m_player);
+		}
 	}
 
 }
@@ -769,8 +817,8 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 
 		Vec2 velocity
 		{
-			std::cos(radians) * normalizedParentPos.x + std::sin(radians) * normalizedParentPos.y,
-			std::sin(radians) * normalizedParentPos.x - std::cos(radians) * normalizedParentPos.y,
+			std::cos(radians),
+			std::sin(radians)
 		};
 
 		//Get the lenght of the vector 
@@ -838,8 +886,8 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 
 		Vec2 velocity
 		{
-			std::cos(radians) * normalizedPos.x + std::sin(radians) * normalizedPos.y,
-			std::sin(radians) * normalizedPos.x - std::cos(radians) * normalizedPos.y,
+			std::cos(radians),
+			std::sin(radians)
 		};
 
 		//Get the lenght of the vector 
@@ -856,3 +904,4 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 		angle += 360 / m_bulletConfig.SB;
 	}
 }
+
