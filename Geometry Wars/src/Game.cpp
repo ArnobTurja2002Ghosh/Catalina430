@@ -459,7 +459,12 @@ void Game::sGUI()
 					ss << m_player->id();
 
 					std::string sService = ss.str();
-					ImGui::Button("D", ImVec2(20, 20)); ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(m_player->tag())); ImGui::SameLine(); 
+					if (ImGui::Button(("D##" + sService).c_str(), ImVec2(20, 20)))
+					{
+						m_player->destroy();
+						spawnPlayer();
+					}
+					ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(m_player->tag())); ImGui::SameLine();
 					
 					ss.str(std::string());
 					ss<<"(" << m_player->cTransform->pos.x << "," << m_player->cTransform->pos.y<<")";
@@ -474,12 +479,24 @@ void Game::sGUI()
 			}
 			if (ImGui::CollapsingHeader("All Entities"))
 			{
+				int i = 0;
 				for (auto e : m_entities.getEntities()) {
 					std::stringstream ss;
 
 					ss << e->id();
 					std::string sService = ss.str();
-					ImGui::Button("D", ImVec2(20, 20)); ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(e->tag())); ImGui::SameLine();
+					
+					ImGui::PushID(i++);
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(float(e->cShape->circle.getFillColor().r)/255, float(e->cShape->circle.getFillColor().g)/255, float(e->cShape->circle.getFillColor().b)/255, float(e->cShape->circle.getFillColor().a)/255));
+
+					if(ImGui::Button(("D##" + sService).c_str(), ImVec2(20, 20))) 
+					{
+						e->destroy();
+					}
+					ImGui::PopStyleColor();
+					ImGui::PopID();
+
+					ImGui::SameLine(); ImGui::Text(sService.c_str()); ImGui::SameLine(); ImGui::Text(enumToString(e->tag())); ImGui::SameLine();
 
 					ss.str(std::string());
 					ss << "(" << e->cTransform->pos.x << "," << e->cTransform->pos.y << ")";
