@@ -11,6 +11,3 @@ The changes I made are:
 - include GUIs such as tabs and checkboxes
   - Unchecking a checkbox will hold the corresponding part of the system in abeyance.
 - make spinning of entities independent of movement
-
-Further changes that can be made (listing just a few of them):
-- I intend to make the Entity tab more aesthetic with color, layout and what not.
