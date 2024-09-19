@@ -19,7 +19,7 @@ private:
 	EnemyConfig			m_enemyConfig;					//the enemy's properties
 	BulletConfig		m_bulletConfig;					//the bullet's properties
 	int					m_score{ 0 };
-
+	int					m_sw;
 	int					m_currentFrame{ 0 };
 	int					m_lastEnemySpawnTime{ 0 };
 
@@ -54,7 +54,7 @@ private:
 	void spawnSmallEnemies(std::shared_ptr<Entity> entity);
 	void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& mousePos);
 	void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
-
+	void spawnSpecialWeapon1(std::shared_ptr<Entity> entity);
 	const char* enumToString(entityTags color);
 	
 public:

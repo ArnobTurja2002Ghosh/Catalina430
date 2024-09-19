@@ -57,7 +57,7 @@ void Game::run()
 void Game::init(const std::string& config)
 {
 	//Makes sure to change the rand seed so it doesnt spawn the same as the last games
-	srand(time(0));
+	srand(time(0)); std::cout << time(0) << '\t' << time << '\t' << RAND_MAX << '\n';
 
 	//To be implemented if I need
 	//m_backgroundTexture.loadFromFile("art/ezgif-2-76dec4f055.jpg");
@@ -437,6 +437,9 @@ void Game::sGUI()
 			ImGui::Checkbox("Collision", &m_collision);
 			ImGui::Checkbox("Spawning", &m_spawner);
 			ImGui::SliderInt("Spawn Interval",&m_enemyConfig.SI,1, 200);
+			const char* arr[] = { "Bullets", "Sword" };
+			ImGui::Combo("Special Weapon", &m_sw, arr, 2);
+
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem("Entities"))
@@ -538,19 +541,39 @@ void Game::sSpawner()
 	//Special player bullet
 	if (m_player->cInput->rightMouse == true)
 	{
-		if ((m_currentFrame - m_specialSpawnStart) >= m_enemyConfig.SI) 
-		{
-			m_player->cInput->rightMouse = false;
-			m_specialSpawnEnd = m_currentFrame;
+		if (m_sw == 0) {
+			if ((m_currentFrame - m_specialSpawnStart) >= 360)
+			{
+				m_player->cInput->rightMouse = false;
+				m_specialSpawnEnd = m_currentFrame;
+			}
+			else if (m_currentFrame - m_specialSpawnEnd <= m_enemyConfig.SI)
+			{
+				m_player->cInput->rightMouse = false;
+			}
+			else if (m_currentFrame % int(20 * m_bulletConfig.SR / m_bulletConfig.S) == 0)
+			{
+				spawnSpecialWeapon(m_player);
+			}
 		}
-		else if(m_currentFrame- m_specialSpawnEnd <= m_enemyConfig.SI)
+		else if (m_sw == 1)
 		{
-			m_player->cInput->rightMouse = false;
+			if ((m_currentFrame - m_specialSpawnStart) >= 360)
+			{
+				m_player->cInput->rightMouse = false;
+				m_specialSpawnEnd = m_currentFrame;
+			}
+			else if (m_currentFrame - m_specialSpawnEnd <= m_enemyConfig.SI)
+			{
+				m_player->cInput->rightMouse = false;
+			}
+			else if (m_currentFrame % 1 == 0)
+			{
+				spawnSpecialWeapon1(m_player);
+			}
+
 		}
-		else if((m_currentFrame%10)==0)
-		{
-			spawnSpecialWeapon(m_player);
-		}
+		
 	}
 
 }
@@ -810,8 +833,8 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 
 	float angle{ 0 };
 
-	std::cout << ParentPos;
-	std::cout << normalizedParentPos;
+	//std::cout << ParentPos;
+	//std::cout << normalizedParentPos;
 
 	for (size_t i{ 0 }; i < vertices; ++i)
 	{
@@ -920,3 +943,19 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 	}
 }
 
+void Game::spawnSpecialWeapon1(std::shared_ptr<Entity> entity)
+{
+	float angle{ 0 };
+
+	for (int j{ 0 }; j < 360; ++j)
+	{
+		auto e = m_entities.addEntity(entityTags::bullet);
+
+		e->cShape = std::make_shared<CShape>(0.5, m_bulletConfig.V,
+			sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB),
+			sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
+		e->cLifespan = std::make_shared<CLifeSpan>(1);
+		e->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
+		e->cTransform = std::make_shared<CTransform>(m_player->cTransform->pos + Vec2(j*cos(m_player->cShape->circle.getRotation() * Math::PI/180), j*sin(m_player->cShape->circle.getRotation() * Math::PI / 180)), Vec2(0, 0), 0);
+	}
+}
