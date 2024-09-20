@@ -32,7 +32,7 @@ private:
 	bool				m_lifeSpan{ true };
 	bool				m_spawner{ true };
 	bool				m_collision{ true };
-
+	std::shared_ptr<Entity> m_boomerang;
 	//sf::Texture			m_backgroundTexture;
 	//sf::Sprite			m_backgroundSprite;
 
@@ -55,6 +55,7 @@ private:
 	void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& mousePos);
 	void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
 	void spawnSpecialWeapon1(std::shared_ptr<Entity> entity);
+	void spawnSpecialWeapon2(std::shared_ptr<Entity> entity, const Vec2& mousePos);
 	const char* enumToString(entityTags color);
 	
 public:

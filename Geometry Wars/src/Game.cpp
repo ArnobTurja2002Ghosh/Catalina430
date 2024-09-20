@@ -437,8 +437,8 @@ void Game::sGUI()
 			ImGui::Checkbox("Collision", &m_collision);
 			ImGui::Checkbox("Spawning", &m_spawner);
 			ImGui::SliderInt("Spawn Interval",&m_enemyConfig.SI,1, 200);
-			const char* arr[] = { "Bullets", "Sword" };
-			ImGui::Combo("Special Weapon", &m_sw, arr, 2);
+			const char* arr[] = { "Bullets", "Sword", "Boomerang"};
+			ImGui::Combo("Special Weapon", &m_sw, arr, 3);
 
 			ImGui::EndTabItem();
 		}
@@ -573,6 +573,21 @@ void Game::sSpawner()
 			}
 
 		}
+		else if (m_sw == 2)
+		{
+			if (m_boomerang && m_boomerang->isActive()) //boomerang not null pointer
+			{
+				m_player->cInput->rightMouse = false;
+			}
+			else if (m_boomerang==nullptr || !m_boomerang->isActive())
+			{
+				Vec2 mousePos{ static_cast<double>(sf::Mouse::getPosition(m_window).x), static_cast<double>(sf::Mouse::getPosition(m_window).y) };
+
+				spawnSpecialWeapon2(m_player, mousePos);
+				m_player->cInput->rightMouse = false;
+
+			}
+		}
 		
 	}
 
@@ -681,6 +696,74 @@ void Game::sCollision()
 		}
 	}
 
+	for (auto bullet : m_entities.getEntities(entityTags::boomerang))
+	{
+		if (abs((bullet->cTransform->pos - bullet->cTarget->pos).lenght()) < bullet->cTransform->velocity.lenght() && bullet->cStatus1->gr == "going") {
+			bullet->cStatus1->gr = "returning";
+			
+		}
+		if (bullet->cStatus1->gr == "returning")
+		{
+			bullet->cTarget->pos = m_player->cTransform->pos;
+			Vec2 difference{ bullet->cTarget->pos.x - bullet->cTransform->pos.x, bullet->cTarget->pos.y - bullet->cTransform->pos.y };
+			difference.normalize();
+
+			Vec2 velocity{ m_bulletConfig.S * difference.x, m_bulletConfig.S * difference.y };
+			bullet->cTransform->velocity = velocity;
+
+			Vec2 diff{ m_player->cTransform->pos.x - bullet->cTransform->pos.x , m_player->cTransform->pos.y - bullet->cTransform->pos.y };
+
+			double collisionRadiusSQ{ (bullet->cCollision->radius + m_player->cCollision->radius) * (bullet->cCollision->radius + m_player->cCollision->radius) };
+			double distSQ{ (diff.x * diff.x) + (diff.y * diff.y) };
+			if (distSQ < collisionRadiusSQ)
+			{
+				bullet->destroy();
+			}
+		}
+		for (auto enemy : m_entities.getEntities(entityTags::enemy))
+		{
+			//if there's a collision between player and enemy
+			//Destroy the player,//Destroy the enemy,//Respawn the player
+
+			Vec2 diff{ enemy->cTransform->pos.x - bullet->cTransform->pos.x , enemy->cTransform->pos.y - bullet->cTransform->pos.y };
+
+			double collisionRadiusSQ{ (bullet->cCollision->radius + enemy->cCollision->radius) * (bullet->cCollision->radius + enemy->cCollision->radius) };
+			double distSQ{ (diff.x * diff.x) + (diff.y * diff.y) };
+
+			if (distSQ < collisionRadiusSQ)
+			{
+				//Updates the score
+				m_score += enemy->cScore->score;
+				m_scoreText.setString(std::to_string(m_score));
+
+				spawnSmallEnemies(enemy);
+				enemy->destroy();
+
+				break;
+			}
+		}
+
+		for (auto enemy : m_entities.getEntities(entityTags::smallEnemy))
+		{
+			//Updates the score
+
+			Vec2 diff{ enemy->cTransform->pos.x - bullet->cTransform->pos.x , enemy->cTransform->pos.y - bullet->cTransform->pos.y };
+
+			double collisionRadiusSQ{ (bullet->cCollision->radius + enemy->cCollision->radius) * (bullet->cCollision->radius + enemy->cCollision->radius) };
+			double distSQ{ (diff.x * diff.x) + (diff.y * diff.y) };
+
+			if (distSQ < collisionRadiusSQ)
+			{
+				m_score += enemy->cScore->score;
+				m_scoreText.setString(std::to_string(m_score));
+
+				enemy->destroy();
+
+				break;
+			}
+		}
+		
+	}
 	//General Collision ie walls && ground && ceiling for player
 
 	for (auto e : m_entities.getEntities(entityTags::player))
@@ -958,4 +1041,19 @@ void Game::spawnSpecialWeapon1(std::shared_ptr<Entity> entity)
 		e->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
 		e->cTransform = std::make_shared<CTransform>(m_player->cTransform->pos + Vec2(j*cos(m_player->cShape->circle.getRotation() * Math::PI/180), j*sin(m_player->cShape->circle.getRotation() * Math::PI / 180)), Vec2(0, 0), 0);
 	}
+}
+
+void Game::spawnSpecialWeapon2(std::shared_ptr<Entity> entity, const Vec2& mousePos) {
+	m_boomerang= m_entities.addEntity(entityTags::boomerang);
+	m_boomerang->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
+	m_boomerang->cShape = std::make_shared<CShape>(m_bulletConfig.SR, m_bulletConfig.V,
+			sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB),
+			sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
+	Vec2 difference{ mousePos.x - entity->cTransform->pos.x, mousePos.y - entity->cTransform->pos.y };
+	difference.normalize();
+
+	Vec2 velocity{ m_bulletConfig.S * difference.x, m_bulletConfig.S * difference.y };
+	m_boomerang->cTarget = std::make_shared<CTarget>(Vec2(mousePos.x, mousePos.y));
+	m_boomerang->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, velocity, 0);
+	m_boomerang->cStatus1 = std::make_shared<CStatus1>("going");
 }

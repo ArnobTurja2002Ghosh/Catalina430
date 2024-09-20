@@ -8,6 +8,8 @@
 #include "CInput.h"
 #include "CLifeSpan.h"
 #include "CShape.h"
+#include "CStatus1.h"
+#include "CTarget.h"
 
 enum class entityTags 
 {
@@ -15,7 +17,8 @@ enum class entityTags
 	player,
 	enemy,
 	smallEnemy,
-	bullet
+	bullet,
+	boomerang
 };
 
 class Entity
@@ -36,6 +39,8 @@ public:
 	std::shared_ptr<CInput>		cInput;
 	std::shared_ptr<CLifeSpan>	cLifespan;
 	std::shared_ptr<CShape>		cShape;
+	std::shared_ptr<CStatus1>   cStatus1;
+	std::shared_ptr<CTarget>    cTarget; 
 
 public:
 	void destroy();
